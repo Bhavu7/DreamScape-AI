@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DreamScape AI</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            .loading-spinner {
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            .fade-in {
+                animation: fadeIn 0.5s ease-in;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        </style>
+    </head>
+    <body class="bg-gray-900 text-white min-h-screen">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Header Section -->
+            <header class="text-center mb-12 opacity-0" id="header">
+                <h1 class="text-4xl font-bold mb-2">DreamScape AI</h1>
+                <p class="text-gray-400" style="font-style: italic;">"Unleash Infinite Creativity with AI-Generated Wallpapers!"</p>
+            </header>
+    
+            <!-- Main Content -->
+            <div class="max-w-3xl mx-auto">
+                <!-- Input Section -->
+                <div class="bg-gray-800 rounded-lg p-6 mb-8 opacity-0" id="inputSection">
+                    <!-- Prompt Input -->
+                    <div class="mb-6">
+                        <label class="block text-gray-300 mb-2">Enter your prompt</label>
+                        <textarea id="promptInput" class="w-full bg-gray-700 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px]" 
+                            placeholder="Describe your desired wallpaper... (e.g., 'A serene mountain landscape at sunset with snow-capped peaks')"></textarea>
+                    </div>
+    
+                    <!-- Resolution Selection -->
+                    <div class="mb-6">
+                        <label class="block text-gray-300 mb-2">Select Resolution</label>
+                        <select id="resolutionSelect" class="w-full bg-gray-700 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="1024x1024">1024x1024 (Square)</option>
+                            <option value="1920x1080" selected>1920x1080 (FHD)</option>
+                            <option value="2560x1440">2560x1440 (2K)</option>
+                        </select>
+                    </div>
+    
+                    <!-- Style Selection -->
+                    <div class="mb-6">
+                        <label class="block text-gray-300 mb-2">Art Style</label>
+                        <select id="styleSelect" class="w-full bg-gray-700 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">None</option>
+                            <option value="digital art style">Digital Art</option>
+                            <option value="oil painting style">Oil Painting</option>
+                            <option value="watercolor style">Watercolor</option>
+                            <option value="minimalist style">Minimalist</option>
+                            <option value="abstract style">Abstract</option>
+                        </select>
+                    </div>
+    
+                    <button id="generateBtn" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 p-4 rounded-lg font-bold transition-all duration-300">
+                        Generate Wallpaper
+                    </button>
+                </div>
+    
+                <!-- Result Section -->
+                <div id="resultSection" class="hidden opacity-0">
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <div id="loadingSpinner" class="hidden">
+                            <div class="flex items-center justify-center">
+                                <div class="loading-spinner w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                            </div>
+                            <p class="text-center mt-4">Generating your wallpaper...</p>
+                        </div>
+    
+                        <div id="wallpaperResult" class="hidden">
+                            <img id="generatedWallpaper" class="w-full rounded-lg mb-4" src="" alt="Generated Wallpaper">
+                            <div class="flex gap-4">
+                                <button id="downloadBtn" class="flex-1 bg-green-600 hover:bg-green-700 p-3 rounded-lg font-bold transition-all duration-300">
+                                    Download
+                                </button>
+                                <button id="generateNewBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 p-3 rounded-lg font-bold transition-all duration-300">
+                                    Generate New
+                                </button>
+                            </div>
+                        </div>
+    
+                        <div id="errorMessage" class="hidden text-red-500 text-center py-4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <script>
+            // DeepSeek API Configuration
+            const DEEPSEEK_API_KEY = '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';
+            const API_URL = 'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0';
+    
+            // UI Elements
+            const elements = {
+                header: document.getElementById('header'),
+                inputSection: document.getElementById('inputSection'),
+                promptInput: document.getElementById('promptInput'),
+                resolutionSelect: document.getElementById('resolutionSelect'),
+                styleSelect: document.getElementById('styleSelect'),
+                generateBtn: document.getElementById('generateBtn'),
+                resultSection: document.getElementById('resultSection'),
+                loadingSpinner: document.getElementById('loadingSpinner'),
+                wallpaperResult: document.getElementById('wallpaperResult'),
+                generatedWallpaper: document.getElementById('generatedWallpaper'),
+                downloadBtn: document.getElementById('downloadBtn'),
+                generateNewBtn: document.getElementById('generateNewBtn'),
+                errorMessage: document.getElementById('errorMessage')
+            };
+    
+            // Initial Animations
+            document.addEventListener('DOMContentLoaded', () => {
+                gsap.to(elements.header, {
+                    opacity: 1,
+                    y: 20,
+                    duration: 1,
+                    ease: "power2.out"
+                });
+    
+                gsap.to(elements.inputSection, {
+                    opacity: 1,
+                    y: 20,
+                    duration: 1,
+                    delay: 0.3,
+                    ease: "power2.out"
+                });
+            });
+    
+            // Generate Wallpaper Function
+        async function generateWallpaper() {
+            const prompt = elements.promptInput.value;
+            const style = elements.styleSelect.value;
+            const resolution = elements.resolutionSelect.value;
+
+            if (!prompt) {
+                showError('Please enter a prompt');
+                return;
+            }
+
+            // Show loading state
+            elements.resultSection.classList.remove('hidden');
+            elements.loadingSpinner.classList.remove('hidden');
+            elements.wallpaperResult.classList.add('hidden');
+            elements.errorMessage.classList.add('hidden');
+
+            gsap.to(elements.resultSection, {
+                opacity: 1,
+                y: 20,
+                duration: 0.5,
+                ease: "power2.out"
+            });
+
+            try {
+                const fullPrompt = style ? `${prompt}, ${style}, high quality, detailed, 8k resolution` : `${prompt}, high quality, detailed, 8k resolution`;
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: fullPrompt,
+                        parameters: {
+                            negative_prompt: "blurry, low quality, distorted, deformed",
+                            num_inference_steps: 30,
+                            guidance_scale: 7.5,
+                            width: parseInt(resolution.split('x')[0]),
+                            height: parseInt(resolution.split('x')[1])
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    if (response.status === 503) {
+                        showError('Model is loading. Please wait a moment and try again.');
+                        return;
+                    }
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to generate image');
+                }
+
+                // Convert the response to blob
+                const imageBlob = await response.blob();
+                const imageUrl = URL.createObjectURL(imageBlob);
+
+                // Display the generated image
+                elements.loadingSpinner.classList.add('hidden');
+                elements.wallpaperResult.classList.remove('hidden');
+                elements.generatedWallpaper.src = imageUrl;
+
+                gsap.from(elements.wallpaperResult, {
+                    opacity: 0,
+                    y: 20,
+                    duration: 0.5,
+                    ease: "power2.out"
+                });
+            } catch (error) {
+                showError(`Error: ${error.message || 'Failed to generate wallpaper. Please try again.'}`);
+                console.error('Error:', error);
+            }
+        }
+            // Show Error Message
+            function showError(message) {
+                elements.errorMessage.textContent = message;
+                elements.errorMessage.classList.remove('hidden');
+                elements.loadingSpinner.classList.add('hidden');
+            }
+    
+            // Download Function
+            async function downloadWallpaper() {
+                try {
+                    const imageUrl = elements.generatedWallpaper.src;
+                    const response = await fetch(imageUrl);
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `wallpaper-${Date.now()}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } catch (error) {
+                    showError('Error downloading wallpaper. Please try again.');
+                }
+            }
+    
+            // Event Listeners
+            elements.generateBtn.addEventListener('click', generateWallpaper);
+            elements.downloadBtn.addEventListener('click', downloadWallpaper);
+            elements.generateNewBtn.addEventListener('click', generateWallpaper);
+    
+            // Handle Enter key in prompt input
+            elements.promptInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    generateWallpaper();
+                }
+            });
+        </script>
+    </body>
+    </html>
