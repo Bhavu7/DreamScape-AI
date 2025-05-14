@@ -2,7 +2,7 @@
 
 DreamScape AI is a web application that allows users to generate AI-powered wallpapers based on their custom prompts. Built with HTML, Tailwind CSS, and GSAP for animations, it leverages the DeepSeek API (via Hugging Face) to create stunning, high-quality wallpapers in various styles and resolutions.
 
-![DreamScape AI Screenshot](Screenshot 2025-02-12 174208.png) <!-- Add a screenshot if available -->
+![Project Screenshot](Screenshot 2025-02-12 174208.png) <!-- Replace with your actual screenshot URL -->
 
 ## Features
 
